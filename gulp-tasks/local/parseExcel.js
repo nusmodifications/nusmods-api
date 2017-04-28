@@ -5,7 +5,6 @@ import bunyan from 'bunyan';
 import R from 'ramda';
 import moment from 'moment';
 import clean from 'underscore.string/clean';
-import mode from '../utils/mode';
 import titleize from '../utils/titleize';
 
 
@@ -54,12 +53,7 @@ const KEYS_MAP = {
   Instructor: 'Lecturers',
 };
 
-const MODULE_FIELDS = [
-  'ModuleCode',
-  'ModuleTitle',
-  'Lecturers',
-  'Timetable',
-];
+const HEADER_ROW = 6;
 
 const LESSON_FIELDS = [
   'ClassNo',
@@ -165,18 +159,15 @@ async function parseExcel(config) {
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const arrayOfCols = sheetToObj(worksheet);
 
-  const lengths = arrayOfCols.map(row => Object.keys(row).length);
-
-  const dataLength = mode(lengths);
-
-  arrayOfCols.slice(0, 6).forEach((row) => {
+  const dataLength = Object.keys(arrayOfCols[HEADER_ROW]).length;
+  arrayOfCols.slice(0, HEADER_ROW).forEach((row) => {
     const length = Object.keys(row).length;
     if (length >= dataLength) {
       throw new Error(`row has exceeded normal range, found ${length}`);
     }
   });
 
-  const rawData = arrayOfCols.filter(row => Object.keys(row).length === dataLength);
+  const rawData = arrayOfCols.slice(HEADER_ROW);
   const modules = consolidate(normalize(rawData));
   subLog.info(`parsed ${modules.length} modules.`);
   async function write(fileName, data) {
