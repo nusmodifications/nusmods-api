@@ -63,7 +63,9 @@
     "sanitize-filename": "^1.6.1",
     "sqlite3": "^3.1.9",
     "underscore.string": "^3.3.4",
-    "uuid": "^3.1.0"
+    "tough-cookie": "^2.3.2",
+    "uuid": "^3.1.0",
+    "xlsx": "^0.8.1"
   },
   "devDependencies": {
     "babel-cli": "^6.16.0",
