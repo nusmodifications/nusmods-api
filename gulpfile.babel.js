@@ -83,6 +83,39 @@ gulp.task('ivle', () => {
   return Promise.all(ivle);
 });
 
+gulp.task('smu', () => {
+  const subtasks = iterateSems({
+    from: yearStart,
+    to: yearEnd,
+    semesters: [1, 2],
+    config: config.smu,
+  });
+  const smu = R.map(tasks.smu, subtasks);
+  return Promise.all(smu);
+});
+
+gulp.task('ntuDetails', () => {
+  const subtasks = iterateSems({
+    from: yearStart,
+    to: yearEnd,
+    semesters: [1],
+    config: config.ntuDetails,
+  });
+  const ntuDetails = R.map(tasks.ntuDetails, subtasks);
+  return Promise.all(ntuDetails);
+});
+
+gulp.task('ntuLessons', () => {
+  const subtasks = iterateSems({
+    from: yearStart,
+    to: yearEnd,
+    semesters: [1],
+    config: config.ntuLessons,
+  });
+  const ntuLessons = R.map(tasks.ntuLessons, subtasks);
+  return Promise.all(ntuLessons);
+});
+
 gulp.task('moduleTimetableDelta', () => tasks.moduleTimetableDelta(config.moduleTimetableDelta));
 
 gulp.task('venues', () => tasks.venues(config.venues));
@@ -144,6 +177,17 @@ gulp.task('splitForYear', () => {
     config,
   });
   return Promise.each(subtasks, tasks.splitForYear);
+});
+
+gulp.task('parseExcel', () => {
+  const subtasks = iterateSems({
+    from: yearStart,
+    to: yearEnd,
+    semesters: [1, 2],
+    config: config.smu,
+  });
+  const smu = R.map(tasks.parseExcel, subtasks);
+  return Promise.all(smu);
 });
 
 gulp.task('local', gulp.series(
