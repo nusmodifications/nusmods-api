@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import url from 'url';
 import got from 'got';
+import tough from 'tough-cookie';
 import parse5 from 'parse5';
 import isBinaryPath from 'is-binary-path';
 import bunyan from 'bunyan';
@@ -15,7 +16,7 @@ function getCachePath(urlStr, cachePath) {
   const fileUrl = url.parse(urlStr);
   const pathAndHash = fileUrl.path + (fileUrl.hash ? fileUrl.hash : '');
   const hostname = encodeURIComponent(fileUrl.hostname);
-  const restOfPath = encodeURIComponent(pathAndHash);
+  const restOfPath = encodeURIComponent(pathAndHash).slice(0, 255);
   return path.join(cachePath, hostname, restOfPath);
 }
 
@@ -50,16 +51,15 @@ async function gotCached(urlStr, config) {
   }
 
   const options = {
-    url: urlStr,
     // returns body as a buffer instead of string if its a binary file
     encoding: isBinaryPath(urlStr) ? null : 'utf-8',
+    ...config,
   };
   if (modifiedTime) {
     options.headers = config.headers || {};
     const modifedTimeString = (new Date(modifiedTime)).toUTCString();
     options.headers['if-modified-since'] = modifedTimeString;
   }
-
   try {
     const response = await got(urlStr, options);
     let body = response.body;
@@ -81,4 +81,26 @@ async function gotCached(urlStr, config) {
   }
 }
 
+async function gotCookied(urlStr, config) {
+  const Cookie = tough.Cookie;
+  try {
+    const res = await got(urlStr, config);
+    let cookies;
+    if (res.headers['set-cookie'] instanceof Array) {
+      cookies = res.headers['set-cookie'].map(Cookie.parse);
+    } else {
+      cookies = [Cookie.parse(res.headers['set-cookie'])];
+    }
+    console.log(cookies);
+    const options = {
+      ...config,
+      headers: { cookie: cookies[0] },
+    };
+    return await gotCached(urlStr, options);
+  } catch (error) {
+    throw error;
+  }
+}
+
 export default gotCached;
+export { gotCookied };
