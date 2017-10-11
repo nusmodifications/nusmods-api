@@ -1,6 +1,6 @@
 import { readFile } from 'xlsx';
 import path from 'path';
-import fs from 'fs-promise';
+import fs from 'fs-extra';
 import bunyan from 'bunyan';
 import R from 'ramda';
 import moment from 'moment';
@@ -155,6 +155,10 @@ async function parseExcel(config) {
     basePath,
     config.destFileName,
   );
+  // TODO: replace this with proper method
+  if (!fs.pathExistsSync(pathToRead)) {
+    return;
+  }
   const workbook = readFile(pathToRead, { cellDates: true });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const arrayOfCols = sheetToObj(worksheet);
@@ -169,6 +173,7 @@ async function parseExcel(config) {
 
   const rawData = arrayOfCols.slice(HEADER_ROW);
   const modules = consolidate(normalize(rawData));
+
   subLog.info(`parsed ${modules.length} modules.`);
   async function write(fileName, data) {
     const pathToWrite = path.join(
@@ -178,6 +183,7 @@ async function parseExcel(config) {
     subLog.info(`saving to ${pathToWrite}`);
     await fs.outputJson(pathToWrite, data, { spaces: config.jsonSpace });
   }
+  // eslint-disable-next-line
   return write('smu.json', modules);
 }
 

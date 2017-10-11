@@ -1,5 +1,5 @@
 import path from 'path';
-import fs from 'fs-promise';
+import fs from 'fs-extra';
 import bunyan from 'bunyan';
 import querystring from 'querystring';
 import got from 'got';
@@ -72,8 +72,12 @@ async function smu(config) {
     subLog.info('excel file link not found, scrape ended.');
     return;
   }
-  const response = await got(R.head(excels), config);
-  const modules = await accessResponse(response, config);
+  // SMU used to make this harder, but now it's easier!
+  // previously:
+  // const modules = await accessResponse(response, config);
+  // now:
+  const res = await got(R.head(excels), { encoding: null });
+  const modules = res.body;
 
   const pathToWrite = path.join(
     config.destFolder,
